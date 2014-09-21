@@ -1,0 +1,15 @@
+<ivy-module version="2.0">
+    <info organisation="net.taunova" module="web-template" status="integration"/>
+   <configurations>
+      <conf name="compile"/>
+      <conf name="runtime"/>
+      <conf name="standalone" extends="runtime"/>
+    </configurations>
+    <publications>
+      <artifact name="web-template" type="jar" conf="runtime"/>
+    </publications>
+    <dependencies>
+        <dependency org="commons-io" name="commons-io" rev="2.4" conf="compile->default"/>
+        <dependency org="org.apache.velocity" name="velocity" rev="1.7"  conf="compile->default"/>        
+    </dependencies>
+</ivy-module>
