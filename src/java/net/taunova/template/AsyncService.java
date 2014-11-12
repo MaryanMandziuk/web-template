@@ -20,7 +20,8 @@ public class AsyncService {
     private final ExecutorService pool;
 
     /**
-     * 
+     * Constructs a service with thread pool initialized by a number of 
+     * available cores.
      */
     public AsyncService() {
         final int cores = Runtime.getRuntime().availableProcessors();
@@ -28,6 +29,7 @@ public class AsyncService {
     }
 
     /**
+     * Executes a task.
      * 
      * @param task a task to be executed
      */
@@ -36,7 +38,7 @@ public class AsyncService {
     }
 
     /**
-     * 
+     * Terminates all tasks and stopes the service.
      */
     void shutdown() {
         pool.shutdown(); // Disable new tasks from being submitted

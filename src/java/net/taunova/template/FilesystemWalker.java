@@ -20,7 +20,9 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
 /**
- *
+ * Basic file-system walker with additional features support, including
+ * references, to be processed templates, etc.
+ * 
  * @author Renat.Gilmanov
  */
 public class FilesystemWalker {
@@ -36,16 +38,17 @@ public class FilesystemWalker {
     protected Map<String, FileInfo> fileMap = new HashMap<>();
     
     /**
-     * 
+     * Constructs the walker.
      */
     public FilesystemWalker() {
     }
            
     /**
+     * Processes specified folder.
      * 
-     * @param folder
-     * @param path
-     * @param createFolder
+     * @param folder a folder to be processed
+     * @param path a result path
+     * @param createFolder specifies if folder should be created 
      * @throws IOException 
      */
     public void processFolder(File folder, String path, boolean createFolder) throws IOException {        
@@ -54,9 +57,10 @@ public class FilesystemWalker {
     }
     
     /**
+     * Lists files referenced by the specified template.
      * 
-     * @param templateContent
-     * @return 
+     * @param templateContent template content
+     * @return map filled with file-name and file-tag pairs
      */
     protected Map<String, String> listReferencedFiles(String templateContent) {
         Map<String, String> templateMap = new HashMap<>();
@@ -147,9 +151,10 @@ public class FilesystemWalker {
     }
     
     /**
+     * Copies a file if there is no target file or target file is older.
      * 
-     * @param fileFrom
-     * @param fileTo
+     * @param fileFrom source file
+     * @param fileTo destination file
      * @throws IOException 
      */
     protected void copyFileIfNeeded(final File fileFrom, final File fileTo) {
@@ -165,10 +170,11 @@ public class FilesystemWalker {
     }
     
     /**
+     * Processes template file.
      * 
-     * @param inFolder
-     * @param file
-     * @return
+     * @param inFolder parent folder
+     * @param file template file to be processed
+     * @return processed content
      * @throws IOException 
      */
     protected String processTmplFile(File inFolder, File file) throws IOException {
