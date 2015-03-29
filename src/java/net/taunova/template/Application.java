@@ -8,8 +8,6 @@ package net.taunova.template;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Template application entry point and arguments processing.
@@ -47,9 +45,11 @@ public class Application {
             System.exit(1);
         }
 
-        FilesystemWalker app = new FilesystemWalker();
         
+        final String MAIN_PROPERTIES = "main";
         try {
+            String settingsName = (args.length > 2) ? args[2] : MAIN_PROPERTIES;
+            FilesystemWalker app = new FilesystemWalker(settingsName);
             app.processFolder(inFolder, outFolder.getAbsolutePath(), false);
         } catch (IOException ex) {
             System.out.println("Error during processing: " + ex.getMessage());

@@ -8,10 +8,12 @@
 package net.taunova.template;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
@@ -28,19 +30,24 @@ import org.apache.velocity.app.Velocity;
 public class FilesystemWalker {
     
     private static final String IGNORE_FLAG = ".ignore";
-    private static final String TMPL_EXT    = ".tmpl";
-    private static final String HTML_EXT    = ".html";
+    private static final String NO_MIRROR_FLAG = ".nomirror";    
     
-    private static final String TMPL_NAME = "tmpl";
-    private static final String PAGE_NAME = "page";        
+    private static final String GLOB_EXT    = ".properties";
+    private static final String TMPL_EXT    = ".tmpl";
+    private static final String HTML_EXT    = ".html";       
+    private static final String PAGE_EXT    = ".page";        
 
     protected AsyncService processor = new AsyncService();
     protected Map<String, FileInfo> fileMap = new HashMap<>();
+    protected Properties globals =  new Properties();
+    private final String settingsName;
     
     /**
      * Constructs the walker.
+     * @param settingsName
      */
-    public FilesystemWalker() {
+    public FilesystemWalker(String settingsName) {
+        this.settingsName = settingsName;
     }
            
     /**
@@ -52,6 +59,14 @@ public class FilesystemWalker {
      * @throws IOException 
      */
     public void processFolder(File folder, String path, boolean createFolder) throws IOException {        
+        final File propertiesFile = new File(folder.getAbsoluteFile()
+                + File.separator
+                + settingsName + ".properties");
+        
+        if(propertiesFile.isFile()) {
+            globals.load(new FileReader(propertiesFile));
+        }
+        
         processFolder(folder, folder, path, createFolder);
         processor.shutdown();
     }
@@ -91,6 +106,10 @@ public class FilesystemWalker {
                 + File.separator
                 + IGNORE_FLAG);
 
+        File noMirrorFlag = new File(folder.getAbsoluteFile()
+                + File.separator
+                + NO_MIRROR_FLAG);        
+        
         if (ignoreFlag.isFile()) {
             return;
         }
@@ -98,7 +117,7 @@ public class FilesystemWalker {
         // create a target folder
         String target = path;
 
-        if (createFolder) {
+        if (createFolder && !noMirrorFlag.isFile()) {
             target = path + File.separator + folder.getName();
             new File(target).mkdir();
         }
@@ -121,19 +140,28 @@ public class FilesystemWalker {
      * @throws IOException 
      */
     protected void processFile(File inFolder, File file, String target) throws IOException {
-        final String fileExt = FilenameUtils.getExtension(file.getName());
-        final String fileName = FilenameUtils.getBaseName(file.getName());
+        final String fileExt = "." + FilenameUtils.getExtension(file.getName());
+        final String fileName = FilenameUtils.getBaseName(file.getName());        
         
         switch(fileExt) {
-            case PAGE_NAME: 
+            case PAGE_EXT: 
                 String result = processTmplFile(inFolder, file);                
                 File outFile = new File(target + File.separator + fileName + HTML_EXT);                
                 // store result
                 saveFile(outFile, result);
                 break;
-            case TMPL_NAME:                 
+            case GLOB_EXT:
+                // do not process template files                
+                break;
+            case TMPL_EXT:                 
                 // do not process template files
                 break;
+            case IGNORE_FLAG:                 
+                // do not process template files
+                break;                
+            case NO_MIRROR_FLAG:                 
+                // do not process template files
+                break;                                
             default:                
                 copyFileIfNeeded(file, new File(target + File.separator + file.getName()));
                 break;
@@ -183,6 +211,10 @@ public class FilesystemWalker {
         Map<String, String> dependencies = listReferencedFiles(template);
 
         VelocityContext context = new VelocityContext();
+
+        for(String key : globals.stringPropertyNames()) {
+            context.put(key, globals.getProperty(key));
+        }
         for (String dep : dependencies.keySet()) {
             if (!fileMap.containsKey(dep)) {
                 File tmplFile = new File(inFolder.getName() + File.separator + dep);
