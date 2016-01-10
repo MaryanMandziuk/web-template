@@ -6,6 +6,7 @@
  */
 package net.taunova.template;
 
+import net.taunova.template.file.FilesystemWalker;
 import java.io.File;
 import java.io.IOException;
 
@@ -16,6 +17,8 @@ import java.io.IOException;
  */
 public class Application {
 
+    private static final String MAIN_PROPERTIES = "main";
+    
     public static void main(String[] args) {
 
         if (args.length < 2) {
@@ -29,13 +32,13 @@ public class Application {
         boolean exit = false;
 
         if (!inFolder.isDirectory()) {
-            System.err.println("In folder does not exist: "
+            System.err.println("Input folder does not exist: "
                     + inFolder.getAbsolutePath());
             exit = true;
         }
 
         if (!outFolder.isDirectory()) {
-            System.err.println("Out folder does not exist: "
+            System.err.println("Output folder does not exist: "
                     + outFolder.getAbsolutePath());
             exit = true;
         }
@@ -43,10 +46,8 @@ public class Application {
         if (exit) {
             System.out.println("terminating...");
             System.exit(1);
-        }
-
+        }               
         
-        final String MAIN_PROPERTIES = "main";
         try {
             String settingsName = (args.length > 2) ? args[2] : MAIN_PROPERTIES;
             FilesystemWalker app = new FilesystemWalker(settingsName);

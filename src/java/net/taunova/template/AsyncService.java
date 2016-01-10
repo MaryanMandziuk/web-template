@@ -17,6 +17,9 @@ import java.util.concurrent.TimeUnit;
  */
 public class AsyncService {
 
+    /**
+     * 
+     */
     private final ExecutorService pool;
 
     /**
@@ -40,13 +43,14 @@ public class AsyncService {
     /**
      * Terminates all tasks and stopes the service.
      */
-    void shutdown() {
+    public void shutdown() {
         pool.shutdown(); // Disable new tasks from being submitted
         
         try {
             // Wait a while for existing tasks to terminate
             if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                pool.shutdownNow(); // Cancel currently executing tasks
+                pool.shutdownNow(); 
+                
                 // Wait a while for tasks to respond to being cancelled
                 if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
                     System.err.println("Pool did not terminate");

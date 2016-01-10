@@ -5,7 +5,7 @@
  * file 'LICENSE.txt', which is part of this source code package.
  */
 
-package net.taunova.template;
+package net.taunova.template.file;
 
 import java.io.File;
 import java.io.FileReader;
@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import net.taunova.template.AsyncService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.velocity.VelocityContext;
@@ -29,7 +30,7 @@ import org.apache.velocity.app.Velocity;
  */
 public class FilesystemWalker {
     
-    private static final String IGNORE_FLAG = ".ignore";
+    private static final String IGNORE_FLAG    = ".ignore";
     private static final String NO_MIRROR_FLAG = ".nomirror";    
     
     private static final String GLOB_EXT    = ".properties";
@@ -44,6 +45,7 @@ public class FilesystemWalker {
     
     /**
      * Constructs the walker.
+     * 
      * @param settingsName
      */
     public FilesystemWalker(String settingsName) {
@@ -151,23 +153,25 @@ public class FilesystemWalker {
                 saveFile(outFile, result);
                 break;
             case GLOB_EXT:
-                // do not process template files                
                 break;
             case TMPL_EXT:                 
                 // do not process template files
                 break;
             case IGNORE_FLAG:                 
-                // do not process template files
                 break;                
             case NO_MIRROR_FLAG:                 
-                // do not process template files
                 break;                                
             default:                
                 copyFileIfNeeded(file, new File(target + File.separator + file.getName()));
                 break;
         }
     }
-    
+
+    /**
+     * 
+     * @param outFile
+     * @param text 
+     */
     protected void saveFile(final File outFile, final String text) {
         processor.execute(() -> {
             try {
@@ -183,7 +187,6 @@ public class FilesystemWalker {
      * 
      * @param fileFrom source file
      * @param fileTo destination file
-     * @throws IOException 
      */
     protected void copyFileIfNeeded(final File fileFrom, final File fileTo) {
         if(!fileTo.isFile() || FileUtils.isFileNewer(fileFrom, fileTo))  {
@@ -215,6 +218,7 @@ public class FilesystemWalker {
         for(String key : globals.stringPropertyNames()) {
             context.put(key, globals.getProperty(key));
         }
+        
         for (String dep : dependencies.keySet()) {
             if (!fileMap.containsKey(dep)) {
                 File tmplFile = new File(inFolder.getName() + File.separator + dep);
@@ -224,6 +228,7 @@ public class FilesystemWalker {
             }
             context.put(dependencies.get(dep), fileMap.get(dep).getText());
         }
+        
         StringWriter result = new StringWriter();
         Velocity.evaluate(context, result, "error", template);
         return result.toString();
