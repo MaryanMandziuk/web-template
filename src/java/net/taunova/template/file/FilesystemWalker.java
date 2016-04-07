@@ -14,6 +14,7 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.taunova.template.AsyncService;
@@ -39,17 +40,21 @@ public class FilesystemWalker {
     private static final String PAGE_EXT    = ".page";        
 
     protected AsyncService processor = new AsyncService();
+    protected Map<String, Long> metrics = new HashMap<>();
+    protected Map<String, Long> sortedMetrics = new TreeMap<>(new ValueComparator(metrics));
     protected Map<String, FileInfo> fileMap = new HashMap<>();
     protected Properties globals =  new Properties();
     private final String settingsName;
+    private final boolean collectMetrics = true ;
     
     /**
      * Constructs the walker.
      * 
      * @param settingsName
      */
-    public FilesystemWalker(String settingsName) {
+    public FilesystemWalker(String settingsName) {        
         this.settingsName = settingsName;
+        
     }
            
     /**
@@ -71,7 +76,21 @@ public class FilesystemWalker {
         
         processFolder(folder, folder, path, createFolder);
         processor.shutdown();
+        
+        if(collectMetrics) {
+            // let's print 10 longest operations
+            int limit = 10;
+            sortedMetrics.putAll(metrics);
+            System.out.println("Processing complexity (ms)");
+            for(String key : sortedMetrics.keySet()) {
+                System.out.println("     - " + key + " - " + metrics.get(key));
+                if(limit-- == 0) {
+                    break;
+                }
+            }
+        }
     }
+        
     
     /**
      * Lists files referenced by the specified template.
@@ -85,6 +104,7 @@ public class FilesystemWalker {
         final String fileReferencePattern = "\\$file-([-|\\w|\\d]+)";
         Pattern p = Pattern.compile(fileReferencePattern);
         Matcher m = p.matcher(templateContent);
+        
         while(m.find()) {
             String depName = m.group(1);
             String fileName =  depName.replace('-', '/') + TMPL_EXT;
@@ -104,11 +124,11 @@ public class FilesystemWalker {
      * @throws IOException 
      */
     protected void processFolder(File inFolder, File folder, String path, boolean createFolder) throws IOException {        
-        File ignoreFlag = new File(folder.getAbsoluteFile()
+        final File ignoreFlag = new File(folder.getAbsoluteFile()
                 + File.separator
                 + IGNORE_FLAG);
 
-        File noMirrorFlag = new File(folder.getAbsoluteFile()
+        final File noMirrorFlag = new File(folder.getAbsoluteFile()
                 + File.separator
                 + NO_MIRROR_FLAG);        
         
@@ -142,15 +162,20 @@ public class FilesystemWalker {
      * @throws IOException 
      */
     protected void processFile(File inFolder, File file, String target) throws IOException {
+        
         final String fileExt = "." + FilenameUtils.getExtension(file.getName());
-        final String fileName = FilenameUtils.getBaseName(file.getName());        
         
         switch(fileExt) {
             case PAGE_EXT: 
-                String result = processTmplFile(inFolder, file);                
-                File outFile = new File(target + File.separator + fileName + HTML_EXT);                
-                // store result
-                saveFile(outFile, result);
+                if(collectMetrics) {
+                    final long time1 = System.currentTimeMillis();
+                    processAndSaveFile(inFolder, file, target);
+                    final long time2 = System.currentTimeMillis();
+                    metrics.put(file.getAbsolutePath(), time2-time1);
+                }else{
+                    processAndSaveFile(inFolder, file, target);
+                }
+                
                 break;
             case GLOB_EXT:
                 break;
@@ -167,6 +192,14 @@ public class FilesystemWalker {
         }
     }
 
+    protected void processAndSaveFile(File inFolder, File file, String target) throws IOException {
+        final String fileName = FilenameUtils.getBaseName(file.getName());                
+        final String result = processTmplFile(inFolder, file);
+        File outFile = new File(target + File.separator + fileName + HTML_EXT);
+        // store result
+        saveFile(outFile, result);
+    }
+    
     /**
      * 
      * @param outFile
@@ -209,8 +242,7 @@ public class FilesystemWalker {
      * @throws IOException 
      */
     protected String processTmplFile(File inFolder, File file) throws IOException {
-
-        String template = FileUtils.readFileToString(file);
+        final String template = FileUtils.readFileToString(file);
         Map<String, String> dependencies = listReferencedFiles(template);
 
         VelocityContext context = new VelocityContext();
@@ -221,7 +253,7 @@ public class FilesystemWalker {
         
         for (String dep : dependencies.keySet()) {
             if (!fileMap.containsKey(dep)) {
-                File tmplFile = new File(inFolder.getName() + File.separator + dep);
+                File tmplFile = new File(inFolder.getAbsolutePath() + File.separator + dep);
                 String result = processTmplFile(inFolder, tmplFile);
                 FileInfo fileInfo = new FileInfo(result);
                 fileMap.put(dep, fileInfo);

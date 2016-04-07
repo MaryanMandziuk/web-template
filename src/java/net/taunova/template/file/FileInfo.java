@@ -23,7 +23,7 @@ public class FileInfo {
     public FileInfo(String text) {
         this.text = text;
     }
-
+ 
     /**
      * Returns processed text.
      * 

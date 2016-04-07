@@ -20,7 +20,6 @@ public class Application {
     private static final String MAIN_PROPERTIES = "main";
     
     public static void main(String[] args) {
-
         if (args.length < 2) {
             System.out.println("Usage: <in-folder> <out-folder>");
             System.exit(1);
@@ -49,11 +48,11 @@ public class Application {
         }               
         
         try {
-            String settingsName = (args.length > 2) ? args[2] : MAIN_PROPERTIES;
+            final String settingsName = (args.length > 2) ? args[2] : MAIN_PROPERTIES;
             FilesystemWalker app = new FilesystemWalker(settingsName);
             app.processFolder(inFolder, outFolder.getAbsolutePath(), false);
         } catch (IOException ex) {
-            System.out.println("Error during processing: " + ex.getMessage());
+            ex.printStackTrace();
         }
     }
 }

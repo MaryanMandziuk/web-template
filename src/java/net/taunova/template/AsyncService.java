@@ -23,8 +23,7 @@ public class AsyncService {
     private final ExecutorService pool;
 
     /**
-     * Constructs a service with thread pool initialized by a number of 
-     * available cores.
+     * Constructs a service with thread pool initialized by a number of available cores.
      */
     public AsyncService() {
         final int cores = Runtime.getRuntime().availableProcessors();
