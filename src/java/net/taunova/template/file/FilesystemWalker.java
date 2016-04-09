@@ -98,7 +98,7 @@ public class FilesystemWalker {
      * @param templateContent template content
      * @return map filled with file-name and file-tag pairs
      */
-    protected Map<String, String> listReferencedFiles(String templateContent) {
+    protected Map<String, String> listReferencedFiles(String templateContent) throws IOException {
         Map<String, String> templateMap = new HashMap<>();
 
         final String fileReferencePattern = "\\$file-([-|\\w|\\d]+)";
@@ -111,10 +111,40 @@ public class FilesystemWalker {
             if(!templateMap.containsKey(fileName)) {
                 templateMap.put(fileName, "file-" + depName);
             }
-        }        
+        }
+        templateMap.putAll(listImages(templateContent));
         return templateMap;
-    }        
+    }         
     
+    
+    protected Map<String, String> listImages(String templateContent) throws IOException {
+        Map<String, String> imagesMap = new HashMap<>();
+        
+        final String imagesPattern = "\\$(image-[\\w|\\d]+)-([-|\\w|\\d]+)";
+        Pattern p = Pattern.compile(imagesPattern);
+        Matcher m = p.matcher(templateContent);
+        
+        while(m.find()) {
+           
+                String templateName = m.group(1);
+                String templateFileName = templateName + TMPL_EXT;
+
+                File tmplFile = new File( "site-protocolstack/templates/"+templateFileName);
+                String temp = FileUtils.readFileToString(tmplFile);
+ 
+                String imageName = m.group(2);
+                String imageFileName = imageName.replace('-', '.');
+                
+                temp = temp.replace("$image-file", "image/" + imageFileName);
+                FileUtils.writeStringToFile(tmplFile, temp);
+                
+                if(!imagesMap.containsKey(temp)) {
+                    imagesMap.put("templates/" + templateFileName, templateName + "-" + imageName);
+            }
+      
+        }
+        return imagesMap;
+    }   
     /**
      * 
      * @param inFolder
