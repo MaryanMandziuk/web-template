@@ -23,139 +23,159 @@ import static org.junit.Assert.*;
 public class FilesystemWalkerTest {
     
     static final String IMAGE_TMPL = "site-protocolstack/templates/image-figure.tmpl";
+    static final String TMPL_EXT = ".tmpl";
+    static final String PAGE_EXT = ".page"; 
+    
     
     public FilesystemWalkerTest() {
     }
     
     @BeforeClass
     public static void setUpClass() throws IOException {
-        File files = new File(IMAGE_TMPL);
-        if (!files.exists()) {
-            if (files.getParentFile().mkdirs()) {
-                files.createNewFile();
-                System.out.println("Multiple directories are created!");
-                
-            } else {
-                System.out.println("Failed to create multiple directories!");
-            }
+        System.out.println("BeforeClass: create testFolder");
+        File main_folder = new File("testFolder/");
+        File template = new File(main_folder.getAbsolutePath() + File.separator + "templates/image-test" + TMPL_EXT);
+        File structure = new File(main_folder.getAbsolutePath() + File.separator + "structure/test" + TMPL_EXT);
+        File page = new File(main_folder.getAbsolutePath() + File.separator + "index" + PAGE_EXT);
+        File image_folder = new File(main_folder.getAbsolutePath() + File.separator + "images");
+        
+        String image_test_content = "<img src=\"$image-file\" alt=\"Just an image\">";
+        String test_tmpl = "<div class=\"content\">"
+                + "<\\div>";
+        String page_content = "Hello $file-structure-test world"
+                + " lorem $image-test-im-jpg dust"
+                + "file $file-structure-test image.";
+        
+        if(!template.exists()) {
+            if(template.getParentFile().mkdirs())
+                template.createNewFile();
         }
+            
+        if(!structure.exists()) {
+            if(structure.getParentFile().mkdirs())
+                structure.createNewFile();
+        }
+        
+        if(!page.exists()) {
+            page.createNewFile();
+        }
+        
+        if(!image_folder.exists()) {
+            image_folder.mkdir();
+        }
+        
+        
+        FileUtils.writeStringToFile(template, image_test_content);
+        FileUtils.writeStringToFile(structure, test_tmpl);
+        FileUtils.writeStringToFile(page, page_content);
 
     }
     
     @AfterClass
     public static void tearDownClass() throws IOException  {
-        File files = new File("site-protocolstack/");
-        if(files.exists()) {
-           FileUtils.deleteDirectory(files);
+        System.out.println("AfterClass: delete testFolder");
+        File main_folder = new File("testFolder/");
+        if(main_folder.exists()) {
+            FileUtils.deleteDirectory(main_folder);
         }
+       
     }
 
     /**
      * Test of processFolder method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
     @Ignore
     @Test
     public void testProcessFolder_3args() throws Exception {
         System.out.println("FilesystemWalker: processFolder()");
-        File folder = null;
-        String path = "";
-        boolean createFolder = false;
-        FilesystemWalker instance = null;
-        instance.processFolder(folder, path, createFolder);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
     }
 
     /**
      * Test of listReferencedFiles method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
+    
     @Test
     public void testListReferencedFiles() throws Exception {
         System.out.println("FilesystemWalker: listReferencedFiles()");
   
-        String templateContent = "Lorem ipsum dolor sit "
-                + "amet, $file-structure-fulltop "
-                + "agam soleat lobortis te sit, nec  ea quem nulla. "
-                + "Inani ullamcorper theophrastus mea eu, nam cu odio "
-                + "impedit mediocritatem. $file-protocol-tcp Inani atomorum ne vix,"
-                + " ne sit malis nusquam. "
-                + "Impedit voluptaria vituperatoribus vim ne,"
-                + " hinc malis errem te ius. "
-                + "Te ludus $file-protocol-udp y quidam quaerendum pro.";
+        String templateContent = FileUtils.readFileToString(new File("testFolder/index.page"));
         
         FilesystemWalker instance = new FilesystemWalker("Mysettings");
         Map<String, String> expResult = new HashMap<>();
+        File inFolder = new File("testFolder/");
+        expResult.put("structure/test.tmpl", "file-structure-test");
+        expResult.put("templates/image-test.tmpl", "image-test-im-jpg");
+        expResult.put("structure/test.tmpl", "file-structure-test");
         
-        expResult.put("structure/fulltop.tmpl", "file-structure-fulltop");
-        expResult.put("protocol/tcp.tmpl", "file-protocol-tcp");
-        expResult.put("protocol/udp.tmpl", "file-protocol-udp");
-        
-        Map<String, String> result = instance.listReferencedFiles(templateContent);
+        Map<String, String> result = instance.listReferencedFiles(templateContent, inFolder);
         assertEquals(expResult, result);
         
     }
 
     /**
      * Test of listImages method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
+    
     @Test
     public void testListImages() throws Exception {
         System.out.println("FilesystemWalker: listImages()");
-        String templateContent = "Lorem ipsum dolor sit "
-                + "amet, $file-structure-fulltop "
-                + "agam soleat lobortis te sit, nec  ea quem nulla. "
-                + "Inani ullamcorper theophrastus mea eu, nam cu odio "
-                + "impedit mediocritatem. $file-protocol-tcp Inani atomorum ne vix,"
-                + " ne sit malis nusquam. $image-figure-spacer-gif "
-                + "Impedit voluptaria vituperatoribus vim ne,"
-                + " hinc malis errem te ius. "
-                + "Te ludus $file-protocol-udpy quidam quaerendum pro.";
+        String templateContent = FileUtils.readFileToString(new File("testFolder/index.page"));
         
         FilesystemWalker instance = new FilesystemWalker("Mysettings");
-        
+        File inFolder = new File("testFolder/");
         Map<String, String> expResult = new HashMap<>();
-        expResult.put("templates/image-figure.tmpl", "image-figure-spacer-gif");
+        expResult.put("templates/image-test.tmpl", "image-test-im-jpg");
                 
-        Map<String, String> result = instance.listImages(templateContent);
+        Map<String, String> result = instance.listImages(templateContent, inFolder);
         assertEquals(expResult, result);
         
     }
 
     /**
      * Test of processFolder method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
     @Ignore
     @Test
     public void testProcessFolder_4args() throws Exception {
-        System.out.println("processFolder");
-        File inFolder = null;
-        File folder = null;
-        String path = "";
+        System.out.println("FilesystemWalker: processFolder_4args()");
+        File inFolder = new File("testFolder/");
+        File folder = new File("testFolder/");
+        String path = "out-folder1/";
         boolean createFolder = false;
-        FilesystemWalker instance = null;
+        FilesystemWalker instance = new FilesystemWalker("Mysettings");
         instance.processFolder(inFolder, folder, path, createFolder);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        FileUtils.deleteDirectory(new File(path));
     }
 
     /**
      * Test of processFile method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
-    @Ignore
+    
     @Test
     public void testProcessFile() throws Exception {
-        System.out.println("processFile");
-        File inFolder = null;
-        File file = null;
-        String target = "";
-        FilesystemWalker instance = null;
+        System.out.println("FilesystemWalker: processFile");
+        File inFolder = new File("testFolder/");
+        File file = new File("testFolder/index.page");
+        String target = "out-folder/";
+        
+        FilesystemWalker instance = new FilesystemWalker("Test");
         instance.processFile(inFolder, file, target);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        
+        for (String key : instance.metrics.keySet()) {
+            assertTrue(instance.metrics.get(key)>0);
+            assertEquals(key, file.getAbsolutePath());
+        }
+        FileUtils.deleteDirectory(new File(target));
     }
 
     /**
      * Test of processAndSaveFile method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
     @Ignore
     @Test
@@ -172,74 +192,70 @@ public class FilesystemWalkerTest {
 
     /**
      * Test of saveFile method, of class FilesystemWalker.
+     * @throws java.io.IOException
      */
     
     @Test
     public void testSaveFile() throws IOException {
-        System.out.println("saveFile");
-        File outFile = new File("test.txt");
+        System.out.println("FilesystemWalker: saveFile()");
+        File outFile = new File("testSave/test.txt");
         String text = "test";
         FileUtils.writeStringToFile(outFile, text);
         FilesystemWalker instance = new FilesystemWalker("Mysettings");
         instance.saveFile(outFile, text);
         String read_file = FileUtils.readFileToString(outFile);
-        assertEquals(text, read_file);
-        FileUtils.deleteQuietly(outFile);
-        // TODO review the generated test code and remove the default call to fail.
-        
+        assertEquals(text, read_file);    
+        FileUtils.deleteDirectory(new File("testSave/"));
     }
 
     /**
      * Test of copyFileIfNeeded method, of class FilesystemWalker.
+     * @throws java.io.IOException
+     * @throws java.lang.InterruptedException
      */
-    @Ignore
+    
     @Test
-    public void testCopyFileIfNeeded() {
-        System.out.println("copyFileIfNeeded");
-        File fileFrom = null;
-        File fileTo = null;
-        FilesystemWalker instance = null;
+    public void testCopyFileIfNeeded() throws IOException, InterruptedException {
+        System.out.println("FilesystemWalker: copyFileIfNeeded()");
+        File fileFrom = new File("testFolder/index.page");
+        File fileTo = new File("testFolder/test/index1.page");
+        //fileTo.createNewFile();
+        FilesystemWalker instance = new FilesystemWalker("Test");
         instance.copyFileIfNeeded(fileFrom, fileTo);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        Thread.sleep(1000);
+        assertEquals(FileUtils.readFileToString(fileTo), FileUtils.readFileToString(fileFrom));
     }
 
     /**
      * Test of processTmplFile method, of class FilesystemWalker.
+     * @throws java.lang.Exception
      */
-    //@Ignore
+    
     @Test
     public void testProcessTmplFile() throws Exception {
-        System.out.println("processTmplFile");
-        File inFolder = new File("testProcess/");
-        File file = new File("testProcess/test.txt");
-        String text = "$file-structure-fulltop\n"
-                + "$image-figure-spacer-gif\n"
-                + "$file-structure-fullbottom";
-        FileUtils.writeStringToFile(file, text);
-        String expResult = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n" +
-"<html xmlns=\"http://www.w3.org/1999/xhtml\">\n" +
-"<head>\n" +
-"<title>Protocol Stack</title>\n" +
-"<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />\n" +
-"<link href=\"$root/css/style.css\" rel=\"stylesheet\" type=\"text/css\" />\n" +
-"</head>\n" +
-"\n" +
-"<body>\n" +
-"\n" +
-"<div class=\"main\">\n"
-                + "<img src=\"image/spacer.gif\" alt=\"Just an image\">\n"
-                + "  $file-navigation-footer\n" +
-"\n" +
-"</div>\n" +
-"</body>\n" +
-"</html>";
+        System.out.println("FilesystemWalker: processTmplFile()");
+        
+        File inFolder = new File("testFolder/");
+        File file = new File("testFolder/index.page");
+        Map<String, FileInfo> fileMap = new HashMap<>();
+        
+        String expResult = "Hello <div class=\"content\"><\\div> world lorem"
+                + " <img src=\"image/im.jpg\" alt=\"Just an image\"> dustfile"
+                + " <div class=\"content\"><\\div> image.";
+        
+        fileMap.put("structure/test.tmpl", new FileInfo("<div class=\"content\"><\\div>"));
+        fileMap.put("templates/image-test.tmpl", new FileInfo("<img src=\"image/im.jpg\" alt=\"Just an image\">"));
+        
+        
         FilesystemWalker instance = new FilesystemWalker("Mysettings");
         String result = instance.processTmplFile(inFolder, file);
-        assertEquals(expResult, result);
         
-
-        FileUtils.deleteQuietly(file);
+        assertEquals(instance.fileMap.keySet(), fileMap.keySet());
+        for (String dep : instance.fileMap.keySet()) {
+            assertEquals(instance.fileMap.get(dep).getText(), fileMap.get(dep).getText());
+        }
+      
+        assertEquals(expResult, result);
     }
     
 }
