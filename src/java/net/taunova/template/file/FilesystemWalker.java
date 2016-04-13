@@ -96,9 +96,11 @@ public class FilesystemWalker {
      * Lists files referenced by the specified template.
      * 
      * @param templateContent template content
+     * @param inFolder
      * @return map filled with file-name and file-tag pairs
+     * @throws java.io.IOException
      */
-    protected Map<String, String> listReferencedFiles(String templateContent) throws IOException {
+    protected Map<String, String> listReferencedFiles(String templateContent, File inFolder) throws IOException {
         Map<String, String> templateMap = new HashMap<>();
 
         final String fileReferencePattern = "\\$file-([-|\\w|\\d]+)";
@@ -112,12 +114,12 @@ public class FilesystemWalker {
                 templateMap.put(fileName, "file-" + depName);
             }
         }
-        templateMap.putAll(listImages(templateContent));
+        templateMap.putAll(listImages(templateContent, inFolder));
         return templateMap;
     }         
     
     
-    protected Map<String, String> listImages(String templateContent) throws IOException {
+    protected Map<String, String> listImages(String templateContent, File inFolder) throws IOException {
         Map<String, String> imagesMap = new HashMap<>();
         
         final String imagesPattern = "\\$(image-[\\w|\\d]+)-([-|\\w|\\d]+)";
@@ -129,7 +131,7 @@ public class FilesystemWalker {
                 String templateName = m.group(1);
                 String templateFileName = templateName + TMPL_EXT;
 
-                File tmplFile = new File( "site-protocolstack/templates/"+templateFileName);
+                File tmplFile = new File(inFolder.getAbsolutePath()+ "/templates/" + templateFileName);
                 String temp = FileUtils.readFileToString(tmplFile);
  
                 String imageName = m.group(2);
@@ -273,12 +275,12 @@ public class FilesystemWalker {
      */
     protected String processTmplFile(File inFolder, File file) throws IOException {
         final String template = FileUtils.readFileToString(file);
-        Map<String, String> dependencies = listReferencedFiles(template);
+        Map<String, String> dependencies = listReferencedFiles(template, inFolder);
 
         VelocityContext context = new VelocityContext();
 
         for(String key : globals.stringPropertyNames()) {
-            context.put(key, globals.getProperty(key));
+            context.put(key, globals.getProperty(key));         
         }
         
         for (String dep : dependencies.keySet()) {
