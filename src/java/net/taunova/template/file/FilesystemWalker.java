@@ -119,6 +119,14 @@ public class FilesystemWalker {
     }         
     
     
+    /**
+     * 
+     * 
+     * @param templateContent template content
+     * @param inFolder
+     * @return map filled with file-name and file-tag pairs
+     * @throws java.io.IOException
+     */
     protected Map<String, String> listImages(String templateContent, File inFolder) throws IOException {
         Map<String, String> imagesMap = new HashMap<>();
         
