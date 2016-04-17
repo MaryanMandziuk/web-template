@@ -137,7 +137,7 @@ public class FilesystemWalker {
                 String imageName = m.group(2);
                 String imageFileName = imageName.replace('-', '.');
                 
-                temp = temp.replace("$image-file", "image/" + imageFileName);
+                temp = temp.replace("$image-file", "images/" + imageFileName);
                 FileUtils.writeStringToFile(tmplFile, temp);
                 
                 if(!imagesMap.containsKey(temp)) {
