@@ -12,6 +12,8 @@ import org.junit.rules.TemporaryFolder;
 import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
 
 /**
@@ -65,22 +67,31 @@ public class ApplicationTest {
         
         Application.main(args);
         
+        
         // Testing for acceptable directory
-        String[] files = out_folder.list();
-        String[] exp_files = {"index.html"};
-        assertArrayEquals("failure - directories not same", exp_files, files);
+        LinkedList<File> outFolderList = (LinkedList<File>) FileUtils.listFilesAndDirs(out_folder, 
+                TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
+ 
+        String [] filesFolders = new String[outFolderList.size()]; 
+        for (int i = 0; i<outFolderList.size(); i++) {
+            filesFolders[i] = outFolderList.get(i).getName();
+        }
+        
+        
+        String[] exp_files = {"testOutFolder", "index.html"};
+        assertArrayEquals("failure - directories not same", exp_files, filesFolders);
         
         // Testing for resulting html
         try {
         String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
-                + File.separator + "inde1x.html"));
+                + File.separator + "index.html"));
         String exp_result = "Hello <div class=\"content\"><\\div> world"
                 + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
                 + "file <div class=\"content\"><\\div> image.";
         assertEquals("failure - genereted file isn't same", exp_result, result);
         } catch(IOException e) {
-            System.out.println("failure - not find file" + e.getMessage());
-            fail("failure - not find file" + e.getMessage());
+            System.out.println("failure - not found file" + e.getMessage());
+            fail("failure - not found file" + e.getMessage());
         }
     }
     
