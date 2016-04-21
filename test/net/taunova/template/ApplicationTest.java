@@ -9,14 +9,17 @@ package net.taunova.template;
 import org.junit.Test;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 import static org.junit.Assert.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
+import org.junit.contrib.java.lang.system.Assertion;
 import org.junit.contrib.java.lang.system.SystemErrRule;
+import org.junit.contrib.java.lang.system.SystemOutRule;
+import org.junit.contrib.java.lang.system.ExpectedSystemExit;
+
 
 /**
  *
@@ -33,13 +36,22 @@ public class ApplicationTest {
     
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
+    
+    @Rule
+    public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
+    
+    @Rule
+    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
+    
+    @Rule
+    public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
     /**
      * Test of main method, of class Application.
      * @throws java.io.IOException
      */
     @Test
     public void testMain() throws IOException {
-        System.out.println("main");
+        System.out.println("--> main");
         final File in_folder = tempFolder.newFolder("testInFolder");
         final File out_folder = tempFolder.newFolder("testOutFolder");
         final File templates_folder = tempFolder.newFolder(in_folder.getName(), "templates");
@@ -98,9 +110,10 @@ public class ApplicationTest {
         }
     }
     
+    
     @Test
     public void functionalTest() throws IOException {
-        System.out.println("functional test");
+        System.out.println("--> functional test");
         
         final File in_folder = tempFolder.newFolder("testInFolder");
         final File out_folder = tempFolder.newFolder("testOutFolder");
@@ -219,28 +232,73 @@ public class ApplicationTest {
     }
     
     
-    
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-    
-    @Rule
-    public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
-    
     @Test
-    public void testInputOutputFolders() throws IOException {
-        System.out.println("test input and output folders");
+    public void testOutputFolders() throws IOException {
+        System.out.println("--> test output folder");
         
         final File in_folder = tempFolder.newFolder("testInFolder");
-        final File out_folder = tempFolder.newFolder("testOutFolder");
-        
-        String[] args = {in_folder.getAbsolutePath(), in_folder.getAbsolutePath()};
+        File no_folder = new File("noFolder");
+        String[] args = {in_folder.getAbsolutePath(), "noFolder"};
         
         exit.expectSystemExitWithStatus(1);
         
-        Application.main(args);
+        exit.checkAssertionAfterwards(new Assertion() {
+                public void checkAssertion() {
+                     
+                    assertEquals("Output folder does not exist: "
+                                + no_folder.getAbsolutePath() + "\n",
+                            systemErrRule.getLog());
+                }
+            });
         
-        assertEquals("Output folder does not exi1st: " + new File("noFolder").getAbsolutePath(),
-                systemErrRule.getLog());
-        System.out.println("Hello worlds");
+        Application.main(args);
+    
+    }  
+    
+    
+    @Test
+    public void testInputFolders() throws IOException {
+        System.out.println("--> test input folder");
+        
+        final File out_folder = tempFolder.newFolder("testOutFolder");
+        File no_folder = new File("noFolder");
+        String[] args = {no_folder.getAbsolutePath(), out_folder.getAbsolutePath()};
+        
+        exit.expectSystemExitWithStatus(1);
+        
+        exit.checkAssertionAfterwards(new Assertion() {
+                public void checkAssertion() {
+                     
+                    assertEquals("Input folder does not exist: "
+                                + no_folder.getAbsolutePath() + "\n",
+                            systemErrRule.getLog());
+                }
+            });
+        
+        Application.main(args);
+   
+    }
+    
+    
+    @Test
+    public void testNumberArgs() throws IOException {
+        System.out.println("--> test args");
+        systemOutRule.clearLog();
+        final File out_folder = tempFolder.newFolder("testOutFolder");
+
+        String[] args = {out_folder.getAbsolutePath()};
+        
+        exit.expectSystemExitWithStatus(1);
+        
+        exit.checkAssertionAfterwards(new Assertion() {
+                public void checkAssertion() {
+                     
+                    assertEquals("Usage: <in-folder> <out-folder>\n",
+                            systemOutRule.getLog());
+                }
+            });
+        
+        Application.main(args);
+
     }   
 }
