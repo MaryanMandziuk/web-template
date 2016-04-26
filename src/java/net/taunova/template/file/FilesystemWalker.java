@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic file-system walker with additional features support, including
@@ -44,8 +46,9 @@ public class FilesystemWalker {
     protected Map<String, Long> sortedMetrics = new TreeMap<>(new ValueComparator(metrics));
     protected Map<String, FileInfo> fileMap = new HashMap<>();
     protected Properties globals =  new Properties();
+    private boolean collectMetrics = false ;
     private final String settingsName;
-    private final boolean collectMetrics = true ;
+    private final Logger logger = LoggerFactory.getLogger(FilesystemWalker.class);
     
     /**
      * Constructs the walker.
@@ -56,7 +59,17 @@ public class FilesystemWalker {
         this.settingsName = settingsName;
         
     }
-           
+    
+    /**
+     * Set collectMetrics
+     * 
+     */
+    
+    public void activateMetrics() {
+        this.collectMetrics = true;
+    }
+    
+    
     /**
      * Processes specified folder.
      * 
@@ -65,6 +78,7 @@ public class FilesystemWalker {
      * @param createFolder specifies if folder should be created 
      * @throws IOException 
      */
+    
     public void processFolder(File folder, String path, boolean createFolder) throws IOException {        
         final File propertiesFile = new File(folder.getAbsoluteFile()
                 + File.separator
@@ -250,7 +264,8 @@ public class FilesystemWalker {
             try {
                 FileUtils.writeStringToFile(outFile, text);
             } catch (IOException ex) {
-                ex.printStackTrace();
+//                ex.printStackTrace();
+                  logger.error("SaveFile error: " + ex);
             }
         });        
     }
@@ -267,7 +282,8 @@ public class FilesystemWalker {
                 try {
                     FileUtils.copyFile(fileFrom, fileTo);
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+//                    ex.printStackTrace();
+                      logger.error("CopyFile error: " + ex);
                 }
             });            
         }         
