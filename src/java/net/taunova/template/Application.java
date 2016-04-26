@@ -32,7 +32,7 @@ public class Application {
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
         Logger logger = LoggerFactory.getLogger(Application.class);
-//        logger.info("Hello World");
+        logger.info("Application for generating sites");
 
         options.addOption("m", "metrics", false, "Activate metrics");
         
