@@ -15,9 +15,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
-import org.junit.contrib.java.lang.system.SystemErrRule;
-import org.junit.contrib.java.lang.system.SystemOutRule;
-import org.junit.contrib.java.lang.system.ExpectedSystemExit;
 /**
  *
  * @author maryan
@@ -37,14 +34,7 @@ public class ApplicationTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
     
-    @Rule
-    public final SystemOutRule systemOutRule = new SystemOutRule().enableLog();
-    
-    @Rule
-    public final ExpectedSystemExit exit = ExpectedSystemExit.none();
-    
-    @Rule
-    public final SystemErrRule systemErrRule = new SystemErrRule().enableLog();
+
     /**
      * Test of main method, of class Application.
      * @throws java.io.IOException
