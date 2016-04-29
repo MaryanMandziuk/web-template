@@ -12,7 +12,7 @@ import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
-//import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -31,13 +31,14 @@ public class Application {
         
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
-        Logger logger = LoggerFactory.getLogger(Application.class);
-        logger.info("Application for generating sites");
+        final Logger logger = LoggerFactory.getLogger(Application.class);
+        logger.info("Application for generating web-pages");
 
         options.addOption("m", "metrics", false, "Activate metrics");
-        
+        options.addOption("p", "properties", true, "Enable your properties");
         options.addOption(Option.builder("f")
                 .numberOfArgs(2)
+                .argName("in-folder out-folder")
                 .required()
                 .desc("required two folders")
                 .build());
@@ -45,27 +46,32 @@ public class Application {
         try {
             CommandLine commandLine = parser.parse(options, args);
             
-            if(commandLine.hasOption("f")) {
+            if (commandLine.hasOption("f")) {
                 
                 final File inFolder = new File(commandLine.getOptionValues("f")[0]);
                 final File outFolder = new File(commandLine.getOptionValues("f")[1]);
 
                 if (!inFolder.isDirectory()) {
-                    System.err.println("Input folder does not exist: "
+                    logger.error("Input folder does not exist: "
                             + inFolder.getAbsolutePath());
                     System.exit(1);
                 }
 
                 if (!outFolder.isDirectory()) {
-                    System.err.println("Output folder does not exist: "
+                     logger.error("Output folder does not exist: "
                             + outFolder.getAbsolutePath());
-                    
+                     System.exit(1);
                 }
 
                     try {
-                        final String settingsName = (args.length > 2) ? args[2] : MAIN_PROPERTIES;
+                        String settingsName;
+                        if (commandLine.hasOption("p")) {
+                            settingsName = commandLine.getOptionValue("p");
+                        } else {
+                            settingsName = MAIN_PROPERTIES;
+                        }
                         FilesystemWalker app = new FilesystemWalker(settingsName);
-                        if(commandLine.hasOption("m")) {
+                        if (commandLine.hasOption("m")) {
                             app.activateMetrics();
                         }
                         app.processFolder(inFolder, outFolder.getAbsolutePath(), false);
@@ -74,8 +80,10 @@ public class Application {
                     }
             }
     
-            } catch(ParseException e) {
-                logger.error("Fail, parse error: ", e);
-            }             
+        } catch (ParseException ex) {
+                logger.error("Fail, parse error: ", ex);
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp( "web-template", options );
+        }             
     }
 }

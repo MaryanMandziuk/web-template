@@ -9,7 +9,8 @@ package net.taunova.template;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 /**
  * Provides a basic asynchronous job execution service.
  * 
@@ -21,7 +22,7 @@ public class AsyncService {
      * 
      */
     private final ExecutorService pool;
-
+    private final Logger logger = LoggerFactory.getLogger(AsyncService.class);
     /**
      * Constructs a service with thread pool initialized by a number of available cores.
      */
@@ -52,7 +53,7 @@ public class AsyncService {
                 
                 // Wait a while for tasks to respond to being cancelled
                 if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                    System.err.println("Pool did not terminate");
+                    logger.error("Pool did not terminate");
                 }
             }
         } catch (InterruptedException ie) {

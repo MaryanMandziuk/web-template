@@ -15,12 +15,9 @@ import java.io.IOException;
 import java.util.LinkedList;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
-import org.junit.contrib.java.lang.system.Assertion;
 import org.junit.contrib.java.lang.system.SystemErrRule;
 import org.junit.contrib.java.lang.system.SystemOutRule;
 import org.junit.contrib.java.lang.system.ExpectedSystemExit;
-
-
 /**
  *
  * @author maryan
@@ -30,6 +27,9 @@ public class ApplicationTest {
     static final String TMPL_EXT = ".tmpl";
     static final String PAGE_EXT = ".page"; 
     static final String GLOB_EXT = ".properties";
+    
+    static final String OPTION_F = "-f";
+    
     
     public ApplicationTest() {
     }   
@@ -78,7 +78,7 @@ public class ApplicationTest {
         FileUtils.writeStringToFile(structure, test_tmpl);
         FileUtils.writeStringToFile(page, page_content);
         
-        String[] args = {in_folder.getAbsolutePath(), out_folder.getAbsolutePath()};
+        String[] args = {OPTION_F, in_folder.getAbsolutePath(), out_folder.getAbsolutePath()};
         
         Application.main(args);
         
@@ -180,7 +180,7 @@ public class ApplicationTest {
         FileUtils.writeStringToFile(properties_file, properties_content);
         
         
-        String[] args = {in_folder.getAbsolutePath(), out_folder.getAbsolutePath()};
+        String[] args = {OPTION_F, in_folder.getAbsolutePath(), out_folder.getAbsolutePath()};
         
         Application.main(args);
         
@@ -230,75 +230,4 @@ public class ApplicationTest {
             fail("failure - not found file" + e.getMessage());
         }
     }
-    
-    
-    @Test
-    public void testOutputFolders() throws IOException {
-        System.out.println("--> test output folder");
-        
-        final File in_folder = tempFolder.newFolder("testInFolder");
-        File no_folder = new File("noFolder");
-        String[] args = {in_folder.getAbsolutePath(), "noFolder"};
-        
-        exit.expectSystemExitWithStatus(1);
-        
-        exit.checkAssertionAfterwards(new Assertion() {
-                public void checkAssertion() {
-                     
-                    assertEquals("Output folder does not exist: "
-                                + no_folder.getAbsolutePath() + "\n",
-                            systemErrRule.getLog());
-                }
-            });
-        
-        Application.main(args);
-    
-    }  
-    
-    
-    @Test
-    public void testInputFolders() throws IOException {
-        System.out.println("--> test input folder");
-        
-        final File out_folder = tempFolder.newFolder("testOutFolder");
-        File no_folder = new File("noFolder");
-        String[] args = {no_folder.getAbsolutePath(), out_folder.getAbsolutePath()};
-        
-        exit.expectSystemExitWithStatus(1);
-        
-        exit.checkAssertionAfterwards(new Assertion() {
-                public void checkAssertion() {
-                     
-                    assertEquals("Input folder does not exist: "
-                                + no_folder.getAbsolutePath() + "\n",
-                            systemErrRule.getLog());
-                }
-            });
-        
-        Application.main(args);
-   
-    }
-    
-    
-    @Test
-    public void testNumberArgs() throws IOException {
-        System.out.println("--> test args");
-        systemOutRule.clearLog();
-        final File out_folder = tempFolder.newFolder("testOutFolder");
-
-        String[] args = {out_folder.getAbsolutePath()};
-        
-        exit.expectSystemExitWithStatus(1);
-        
-        exit.checkAssertionAfterwards(new Assertion() {
-                public void checkAssertion() {
-                     
-                    assertEquals("Usage: <in-folder> <out-folder>\n",
-                            systemOutRule.getLog());
-                }
-            });
-        
-        Application.main(args);
-
-    }   
 }

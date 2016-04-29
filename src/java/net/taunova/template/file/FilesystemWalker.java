@@ -79,18 +79,26 @@ public class FilesystemWalker {
      * @throws IOException 
      */
     
-    public void processFolder(File folder, String path, boolean createFolder) throws IOException {        
+    public void processFolder(File folder, String path, boolean createFolder) throws IOException {
         final File propertiesFile = new File(folder.getAbsoluteFile()
                 + File.separator
                 + settingsName + ".properties");
         
+        FileReader fileReader = null;
         if(propertiesFile.isFile()) {
-            globals.load(new FileReader(propertiesFile));
+            try {
+                fileReader = new FileReader(propertiesFile);
+                globals.load(fileReader);
+            } finally {
+                if (fileReader != null) {
+                    fileReader.close();
+                }
+            }
         }
         
         processFolder(folder, folder, path, createFolder);
         processor.shutdown();
-        
+       
         if(collectMetrics) {
             // let's print 10 longest operations
             int limit = 10;
@@ -150,22 +158,21 @@ public class FilesystemWalker {
         
         while(m.find()) {
            
-                String templateName = m.group(1);
-                String templateFileName = templateName + TMPL_EXT;
+            String templateName = m.group(1);
+            String templateFileName = templateName + TMPL_EXT;
 
-                File tmplFile = new File(inFolder.getAbsolutePath()+ "/templates/" + templateFileName);
-                String temp = FileUtils.readFileToString(tmplFile);
+            File tmplFile = new File(inFolder.getAbsolutePath()+ "/templates/" + templateFileName);
+            String temp = FileUtils.readFileToString(tmplFile);
  
-                String imageName = m.group(2);
-                String imageFileName = imageName.replace('-', '.');
+            String imageName = m.group(2);
+            String imageFileName = imageName.replace('-', '.');
                 
-                temp = temp.replace("$image-file", "images/" + imageFileName);
-                FileUtils.writeStringToFile(tmplFile, temp);
+            temp = temp.replace("$image-file", "images/" + imageFileName);
+            FileUtils.writeStringToFile(tmplFile, temp);
                 
-                if(!imagesMap.containsKey(temp)) {
+            if (!imagesMap.containsKey(temp)) {
                     imagesMap.put("templates/" + templateFileName, templateName + "-" + imageName);
             }
-      
         }
         return imagesMap;
     }   
@@ -195,7 +202,9 @@ public class FilesystemWalker {
 
         if (createFolder && !noMirrorFlag.isFile()) {
             target = path + File.separator + folder.getName();
-            new File(target).mkdir();
+                if (!(new File(target).mkdir())) {
+                    logger.error("Unable to create path: " + target);
+                }               
         }
 
         File[] files = folder.listFiles();
@@ -221,12 +230,12 @@ public class FilesystemWalker {
         
         switch(fileExt) {
             case PAGE_EXT: 
-                if(collectMetrics) {
+                if (collectMetrics) {
                     final long time1 = System.currentTimeMillis();
                     processAndSaveFile(inFolder, file, target);
                     final long time2 = System.currentTimeMillis();
                     metrics.put(file.getAbsolutePath(), time2-time1);
-                }else{
+                } else {
                     processAndSaveFile(inFolder, file, target);
                 }
                 
@@ -264,8 +273,7 @@ public class FilesystemWalker {
             try {
                 FileUtils.writeStringToFile(outFile, text);
             } catch (IOException ex) {
-//                ex.printStackTrace();
-                  logger.error("SaveFile error: " + ex);
+                  logger.error("SaveFile error: ", ex);
             }
         });        
     }
@@ -282,8 +290,7 @@ public class FilesystemWalker {
                 try {
                     FileUtils.copyFile(fileFrom, fileTo);
                 } catch (IOException ex) {
-//                    ex.printStackTrace();
-                      logger.error("CopyFile error: " + ex);
+                    logger.error("CopyFile error: ", ex);
                 }
             });            
         }         
