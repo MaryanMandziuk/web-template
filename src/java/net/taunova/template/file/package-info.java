@@ -5,4 +5,4 @@
  * file 'LICENSE.txt', which is part of this source code package.
  */
 
-package net.taunova.template;
+package net.taunova.template.file;

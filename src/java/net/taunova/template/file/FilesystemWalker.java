@@ -22,6 +22,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Basic file-system walker with additional features support, including
@@ -44,8 +46,9 @@ public class FilesystemWalker {
     protected Map<String, Long> sortedMetrics = new TreeMap<>(new ValueComparator(metrics));
     protected Map<String, FileInfo> fileMap = new HashMap<>();
     protected Properties globals =  new Properties();
+    private boolean collectMetrics = false ;
     private final String settingsName;
-    private final boolean collectMetrics = true ;
+    private final Logger logger = LoggerFactory.getLogger(FilesystemWalker.class);
     
     /**
      * Constructs the walker.
@@ -56,7 +59,17 @@ public class FilesystemWalker {
         this.settingsName = settingsName;
         
     }
-           
+    
+    /**
+     * Set collectMetrics
+     * 
+     */
+    
+    public void activateMetrics() {
+        this.collectMetrics = true;
+    }
+    
+    
     /**
      * Processes specified folder.
      * 
@@ -65,18 +78,27 @@ public class FilesystemWalker {
      * @param createFolder specifies if folder should be created 
      * @throws IOException 
      */
-    public void processFolder(File folder, String path, boolean createFolder) throws IOException {        
+    
+    public void processFolder(File folder, String path, boolean createFolder) throws IOException {
         final File propertiesFile = new File(folder.getAbsoluteFile()
                 + File.separator
                 + settingsName + ".properties");
         
+        FileReader fileReader = null;
         if(propertiesFile.isFile()) {
-            globals.load(new FileReader(propertiesFile));
+            try {
+                fileReader = new FileReader(propertiesFile);
+                globals.load(fileReader);
+            } finally {
+                if (fileReader != null) {
+                    fileReader.close();
+                }
+            }
         }
         
         processFolder(folder, folder, path, createFolder);
         processor.shutdown();
-        
+       
         if(collectMetrics) {
             // let's print 10 longest operations
             int limit = 10;
@@ -96,9 +118,11 @@ public class FilesystemWalker {
      * Lists files referenced by the specified template.
      * 
      * @param templateContent template content
+     * @param inFolder
      * @return map filled with file-name and file-tag pairs
+     * @throws java.io.IOException
      */
-    protected Map<String, String> listReferencedFiles(String templateContent) {
+    protected Map<String, String> listReferencedFiles(String templateContent, File inFolder) throws IOException {
         Map<String, String> templateMap = new HashMap<>();
 
         final String fileReferencePattern = "\\$file-([-|\\w|\\d]+)";
@@ -111,10 +135,47 @@ public class FilesystemWalker {
             if(!templateMap.containsKey(fileName)) {
                 templateMap.put(fileName, "file-" + depName);
             }
-        }        
+        }
+        templateMap.putAll(listImages(templateContent, inFolder));
         return templateMap;
-    }        
+    }         
     
+    
+    /**
+     * 
+     * 
+     * @param templateContent template content
+     * @param inFolder
+     * @return map filled with file-name and file-tag pairs
+     * @throws java.io.IOException
+     */
+    protected Map<String, String> listImages(String templateContent, File inFolder) throws IOException {
+        Map<String, String> imagesMap = new HashMap<>();
+        
+        final String imagesPattern = "\\$(image-[\\w|\\d]+)-([-|\\w|\\d]+)";
+        Pattern p = Pattern.compile(imagesPattern);
+        Matcher m = p.matcher(templateContent);
+        
+        while(m.find()) {
+           
+            String templateName = m.group(1);
+            String templateFileName = templateName + TMPL_EXT;
+
+            File tmplFile = new File(inFolder.getAbsolutePath()+ "/templates/" + templateFileName);
+            String temp = FileUtils.readFileToString(tmplFile);
+ 
+            String imageName = m.group(2);
+            String imageFileName = imageName.replace('-', '.');
+                
+            temp = temp.replace("$image-file", "images/" + imageFileName);
+            FileUtils.writeStringToFile(tmplFile, temp);
+                
+            if (!imagesMap.containsKey(temp)) {
+                    imagesMap.put("templates/" + templateFileName, templateName + "-" + imageName);
+            }
+        }
+        return imagesMap;
+    }   
     /**
      * 
      * @param inFolder
@@ -141,7 +202,9 @@ public class FilesystemWalker {
 
         if (createFolder && !noMirrorFlag.isFile()) {
             target = path + File.separator + folder.getName();
-            new File(target).mkdir();
+                if (!(new File(target).mkdir())) {
+                    logger.error("Unable to create path: " + target);
+                }               
         }
 
         File[] files = folder.listFiles();
@@ -167,12 +230,12 @@ public class FilesystemWalker {
         
         switch(fileExt) {
             case PAGE_EXT: 
-                if(collectMetrics) {
+                if (collectMetrics) {
                     final long time1 = System.currentTimeMillis();
                     processAndSaveFile(inFolder, file, target);
                     final long time2 = System.currentTimeMillis();
                     metrics.put(file.getAbsolutePath(), time2-time1);
-                }else{
+                } else {
                     processAndSaveFile(inFolder, file, target);
                 }
                 
@@ -210,7 +273,7 @@ public class FilesystemWalker {
             try {
                 FileUtils.writeStringToFile(outFile, text);
             } catch (IOException ex) {
-                ex.printStackTrace();
+                  logger.error("SaveFile error: ", ex);
             }
         });        
     }
@@ -227,7 +290,7 @@ public class FilesystemWalker {
                 try {
                     FileUtils.copyFile(fileFrom, fileTo);
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    logger.error("CopyFile error: ", ex);
                 }
             });            
         }         
@@ -243,12 +306,12 @@ public class FilesystemWalker {
      */
     protected String processTmplFile(File inFolder, File file) throws IOException {
         final String template = FileUtils.readFileToString(file);
-        Map<String, String> dependencies = listReferencedFiles(template);
+        Map<String, String> dependencies = listReferencedFiles(template, inFolder);
 
         VelocityContext context = new VelocityContext();
 
         for(String key : globals.stringPropertyNames()) {
-            context.put(key, globals.getProperty(key));
+            context.put(key, globals.getProperty(key));         
         }
         
         for (String dep : dependencies.keySet()) {
