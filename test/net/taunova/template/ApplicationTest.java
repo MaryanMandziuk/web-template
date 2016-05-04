@@ -34,7 +34,17 @@ public class ApplicationTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
     
-
+    
+    public File createTempFolder(File in_folder, String newFolderName, String newFileName) throws IOException {
+        final File templates_folder = tempFolder.newFolder(in_folder.getName(), newFolderName);
+        final File template = tempFolder.newFile(in_folder.getName() + File.separator 
+                + templates_folder.getName() + File.separator + newFileName + TMPL_EXT);
+        tempFolder.newFile(in_folder.getName() 
+                + File.separator + templates_folder.getName() + File.separator + ".nomirror");
+        return template;
+    }
+    
+    
     /**
      * Test of main method, of class Application.
      * @throws java.io.IOException
@@ -44,16 +54,13 @@ public class ApplicationTest {
         System.out.println("--> main");
         final File in_folder = tempFolder.newFolder("testInFolder");
         final File out_folder = tempFolder.newFolder("testOutFolder");
-        final File templates_folder = tempFolder.newFolder(in_folder.getName(), "templates");
-        final File template = tempFolder.newFile(in_folder.getName() + File.separator 
-                + templates_folder.getName() + File.separator + "image-test" + TMPL_EXT);
-        final File template_nomirror = tempFolder.newFile(in_folder.getName() 
-                + File.separator + templates_folder.getName() + File.separator + ".nomirror");
-        final File structure_folder = tempFolder.newFolder(in_folder.getName(), "structure");
-        final File structure = tempFolder.newFile(in_folder.getName() + File.separator 
-                + structure_folder.getName() + File.separator + "test" + TMPL_EXT);
-        final File structure_nomirror = tempFolder.newFile(in_folder.getName() 
-                + File.separator + structure_folder.getName() + File.separator + ".nomirror");
+        
+        
+        File template = createTempFolder(in_folder, "templates", "image-test");
+
+        File structure = createTempFolder(in_folder, "structure", "test");
+
+        
         final File page = tempFolder.newFile(in_folder.getName() + File.separator 
                 + "index" + PAGE_EXT);
         
@@ -88,12 +95,12 @@ public class ApplicationTest {
         
         // Testing for resulting html
         try {
-        String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
-                + File.separator + "index.html"));
-        String exp_result = "Hello <div class=\"content\"><\\div> world"
-                + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
-                + "file <div class=\"content\"><\\div> image.";
-        assertEquals("failure - genereted file isn't same", exp_result, result);
+            String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
+                    + File.separator + "index.html"));
+            String exp_result = "Hello <div class=\"content\"><\\div> world"
+                    + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
+                    + "file <div class=\"content\"><\\div> image.";
+            assertEquals("failure - genereted file isn't same", exp_result, result);
         } catch(IOException e) {
             System.out.println("failure - not found file" + e.getMessage());
             fail("failure - not found file" + e.getMessage());
@@ -108,24 +115,12 @@ public class ApplicationTest {
         final File in_folder = tempFolder.newFolder("testInFolder");
         final File out_folder = tempFolder.newFolder("testOutFolder");
         
-        final File templates_folder = tempFolder.newFolder(in_folder.getName(), "templates");
-        final File template_file = tempFolder.newFile(in_folder.getName() + File.separator 
-                + templates_folder.getName() + File.separator + "image-test" + TMPL_EXT);
-        final File template_nomirror = tempFolder.newFile(in_folder.getName() 
-                + File.separator + templates_folder.getName() + File.separator + ".nomirror");
-        
-        final File structure_folder = tempFolder.newFolder(in_folder.getName(), "structure");
-        final File structure_file = tempFolder.newFile(in_folder.getName() + File.separator 
-                + structure_folder.getName() + File.separator + "test" + TMPL_EXT);
-        final File structure_nomirror = tempFolder.newFile(in_folder.getName() 
-                + File.separator + structure_folder.getName() + File.separator + ".nomirror");
-        
-        final File deeper_folder = tempFolder.newFolder(in_folder.getName(), "deeper");
-        final File deeper_file = tempFolder.newFile(in_folder.getName() + File.separator 
-                + deeper_folder.getName() + File.separator + "dee" + TMPL_EXT);
-        final File deeper_nomirror = tempFolder.newFile(in_folder.getName() 
-                + File.separator + deeper_folder.getName() + File.separator + ".nomirror");
-        
+        File template_file = createTempFolder(in_folder, "templates", "image-test");
+
+        File structure_file = createTempFolder(in_folder, "structure", "test");
+
+        File deeper_file = createTempFolder(in_folder, "deeper", "dee");
+
         final File images_folder = tempFolder.newFolder(in_folder.getName(), "images");
         final File image_file = tempFolder.newFile(in_folder.getName() + File.separator 
                 + images_folder.getName() + File.separator + "testImage.jpg");
@@ -190,15 +185,15 @@ public class ApplicationTest {
         
         
         try {
-        String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
-                + File.separator + "index.html"));
-        String exp_result = "Hello <div class=\"content\"><\\div> <h1>some html</h1> "
-                + "Some content exit. World"
-                + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
-                + "file <div class=\"content\"><\\div> <h1>some html</h1> "
-                + "Some content exit.";
-        
-        assertEquals("failure - genereted file isn't same", exp_result, result);
+            String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
+                    + File.separator + "index.html"));
+            String exp_result = "Hello <div class=\"content\"><\\div> <h1>some html</h1> "
+                    + "Some content exit. World"
+                    + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
+                    + "file <div class=\"content\"><\\div> <h1>some html</h1> "
+                    + "Some content exit.";
+
+            assertEquals("failure - genereted file isn't same", exp_result, result);
         
         } catch(IOException e) {
             System.out.println("failure - not found file" + e.getMessage());
@@ -208,12 +203,12 @@ public class ApplicationTest {
         
         
         try {
-        String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
-                + File.separator + static_folder.getName() + File.separator + "staticIndex.html"));
-        
-        String exp_result = "<div>Hello World!</div> oOps!";
-        
-        assertEquals("failure - genereted file isn't same", exp_result, result);
+            String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
+                    + File.separator + static_folder.getName() + File.separator + "staticIndex.html"));
+
+            String exp_result = "<div>Hello World!</div> oOps!";
+
+            assertEquals("failure - genereted file isn't same", exp_result, result);
         
         } catch(IOException e) {
             System.out.println("failure - not found file" + e.getMessage());
