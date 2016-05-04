@@ -34,7 +34,14 @@ public class ApplicationTest {
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
     
-    
+    /**
+     * Generate folder with template and .nomirror 
+     * @param in_folder
+     * @param newFolderName
+     * @param newFileName
+     * @return
+     * @throws IOException 
+     */
     public File createTempFolder(File in_folder, String newFolderName, String newFileName) throws IOException {
         final File templates_folder = tempFolder.newFolder(in_folder.getName(), newFolderName);
         final File template = tempFolder.newFile(in_folder.getName() + File.separator 
@@ -107,7 +114,10 @@ public class ApplicationTest {
         }
     }
     
-    
+    /**
+     * Testing the functionality of application
+     * @throws IOException 
+     */
     @Test
     public void functionalTest() throws IOException {
         System.out.println("--> functional test");
