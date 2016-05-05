@@ -10,7 +10,6 @@ package net.taunova.template.file;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -20,10 +19,11 @@ import java.util.regex.Pattern;
 import net.taunova.template.AsyncService;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import httl.*;
+import java.text.ParseException;
+import java.util.logging.Level;
 
 /**
  * Basic file-system walker with additional features support, including
@@ -125,15 +125,15 @@ public class FilesystemWalker {
     protected Map<String, String> listReferencedFiles(String templateContent, File inFolder) throws IOException {
         Map<String, String> templateMap = new HashMap<>();
 
-        final String fileReferencePattern = "\\$file-([-|\\w|\\d]+)";
+        final String fileReferencePattern = "\\$!\\{file_([_|\\w|\\d]+)\\}";
         Pattern p = Pattern.compile(fileReferencePattern);
         Matcher m = p.matcher(templateContent);
         
         while(m.find()) {
             String depName = m.group(1);
-            String fileName =  depName.replace('-', '/') + TMPL_EXT;
+            String fileName =  depName.replace('_', '/') + TMPL_EXT;
             if(!templateMap.containsKey(fileName)) {
-                templateMap.put(fileName, "file-" + depName);
+                templateMap.put(fileName, "file_" + depName);
             }
         }
         templateMap.putAll(listImages(templateContent, inFolder));
@@ -152,7 +152,7 @@ public class FilesystemWalker {
     protected Map<String, String> listImages(String templateContent, File inFolder) throws IOException {
         Map<String, String> imagesMap = new HashMap<>();
         
-        final String imagesPattern = "\\$(image-[\\w|\\d]+)-([-|\\w|\\d]+)";
+        final String imagesPattern = "\\$!\\{(image_[\\w|\\d&&[^_]]+)_([_|\\w|\\d]+)\\}";
         Pattern p = Pattern.compile(imagesPattern);
         Matcher m = p.matcher(templateContent);
         
@@ -160,18 +160,18 @@ public class FilesystemWalker {
            
             String templateName = m.group(1);
             String templateFileName = templateName + TMPL_EXT;
-
+           
             File tmplFile = new File(inFolder.getAbsolutePath()+ "/templates/" + templateFileName);
             String temp = FileUtils.readFileToString(tmplFile);
  
             String imageName = m.group(2);
-            String imageFileName = imageName.replace('-', '.');
-                
-            temp = temp.replace("$image-file", "images/" + imageFileName);
+            String imageFileName = imageName.replace('_', '.');
+            
+            temp = temp.replace("$!{image_file}", "images/" + imageFileName);
             FileUtils.writeStringToFile(tmplFile, temp);
-                
+            
             if (!imagesMap.containsKey(temp)) {
-                    imagesMap.put("templates/" + templateFileName, templateName + "-" + imageName);
+                    imagesMap.put("templates/" + templateFileName, templateName + "_" + imageName);
             }
         }
         return imagesMap;
@@ -307,11 +307,12 @@ public class FilesystemWalker {
     protected String processTmplFile(File inFolder, File file) throws IOException {
         final String template = FileUtils.readFileToString(file);
         Map<String, String> dependencies = listReferencedFiles(template, inFolder);
+        
+        Map<String, String> parameters = new HashMap<>();
 
-        VelocityContext context = new VelocityContext();
 
         for(String key : globals.stringPropertyNames()) {
-            context.put(key, globals.getProperty(key));         
+            parameters.put(key, globals.getProperty(key));
         }
         
         for (String dep : dependencies.keySet()) {
@@ -321,11 +322,20 @@ public class FilesystemWalker {
                 FileInfo fileInfo = new FileInfo(result);
                 fileMap.put(dep, fileInfo);
             }
-            context.put(dependencies.get(dep), fileMap.get(dep).getText());
+
+            parameters.put(dependencies.get(dep), fileMap.get(dep).getText());
         }
         
-        StringWriter result = new StringWriter();
-        Velocity.evaluate(context, result, "error", template);
-        return result.toString();
+        String result = null;
+
+        Engine engine = Engine.getEngine();
+        try {
+            Template template1 = engine.parseTemplate(template);
+            result = (String) template1.evaluate(parameters);
+        } catch (ParseException ex) {
+            java.util.logging.Logger.getLogger(FilesystemWalker.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return result;
     }    
 }

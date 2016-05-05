@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.FileUtils;
+import org.junit.Ignore;
 /**
  *
  * @author maryan
@@ -63,7 +64,7 @@ public class ApplicationTest {
         final File out_folder = tempFolder.newFolder("testOutFolder");
         
         
-        File template = createTempFolder(in_folder, "templates", "image-test");
+        File template = createTempFolder(in_folder, "templates", "image_test");
 
         File structure = createTempFolder(in_folder, "structure", "test");
 
@@ -72,11 +73,11 @@ public class ApplicationTest {
                 + "index" + PAGE_EXT);
         
         
-        String image_test_content = "<img src=\"$image-file\" alt=\"Just an image\">";
+        String image_test_content = "<img src=\"$!{image_file}\" alt=\"Just an image\">";
         String test_tmpl = "<div class=\"content\"><\\div>";
-        String page_content = "Hello $file-structure-test world"
-                + " lorem $image-test-im-jpg dust"
-                + "file $file-structure-test image.";
+        String page_content = "Hello $!{file_structure_test} world"
+                + " lorem $!{image_test_im_jpg} dust"
+                + "file $!{file_structure_test} image.";
         
         FileUtils.writeStringToFile(template, image_test_content);
         FileUtils.writeStringToFile(structure, test_tmpl);
@@ -125,7 +126,7 @@ public class ApplicationTest {
         final File in_folder = tempFolder.newFolder("testInFolder");
         final File out_folder = tempFolder.newFolder("testOutFolder");
         
-        File template_file = createTempFolder(in_folder, "templates", "image-test");
+        File template_file = createTempFolder(in_folder, "templates", "image_test");
 
         File structure_file = createTempFolder(in_folder, "structure", "test");
 
@@ -154,15 +155,15 @@ public class ApplicationTest {
                 + "index" + PAGE_EXT);
         
         
-        String image_test_content = "<img src=\"$image-file\" alt=\"Just an image\">";
+        String image_test_content = "<img src=\"$!{image_file}\" alt=\"Just an image\">";
         String template_content = "<div class=\"content\"><\\div>" 
-                + " <h1>some html</h1> $file-deeper-dee exit.";
-        String page_content = "Hello $file-structure-test World"
-                + " lorem $image-test-im-jpg dust"
-                + "file $file-structure-test";
+                + " <h1>some html</h1> $!{file_deeper_dee} exit.";
+        String page_content = "Hello $!{file_structure_test} World"
+                + " lorem $!{image_test_im_jpg} dust"
+                + "file $!{file_structure_test}";
         String deeper_content = "Some content";
-        String static_content = "<div>Hello World!</div> $prop";
-        String static_page_content = "$file-static-staticTest";
+        String static_content = "<div>Hello World!</div> $!{prop}";
+        String static_page_content = "$!{file_static_staticTest}";
         String properties_content = "prop=oOps!";
         
         
