@@ -171,7 +171,7 @@ public class FilesystemWalker {
                     .replace(lastOccurrence, lastOccurrence + 1, ".")
                     .toString();
                 
-            temp = temp.replace("$image-file", "images/" + imageFileName);       
+            temp = temp.replace("$image-file", "/images/" + imageFileName);       
             
             imagesMap.put(templateName + "-" + imageName, temp);
             
