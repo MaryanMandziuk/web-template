@@ -75,7 +75,7 @@ public class ApplicationTest {
         String image_test_content = "<img src=\"$image-file\" alt=\"Just an image\">";
         String test_tmpl = "<div class=\"content\"><\\div>";
         String page_content = "Hello $file-structure-test world"
-                + " lorem $image-test-im-jpg dust"
+                + " lorem $image-test-im-1-ost-jpg dust"
                 + "file $file-structure-test image.";
         
         FileUtils.writeStringToFile(template, image_test_content);
@@ -105,7 +105,7 @@ public class ApplicationTest {
             String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
                     + File.separator + "index.html"));
             String exp_result = "Hello <div class=\"content\"><\\div> world"
-                    + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
+                    + " lorem <img src=\"images/im-1-ost.jpg\" alt=\"Just an image\"> dust"
                     + "file <div class=\"content\"><\\div> image.";
             assertEquals("failure - genereted file isn't same", exp_result, result);
         } catch(IOException e) {

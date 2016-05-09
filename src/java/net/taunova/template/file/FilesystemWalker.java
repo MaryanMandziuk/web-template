@@ -11,6 +11,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.StringBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -165,7 +166,8 @@ public class FilesystemWalker {
             String temp = FileUtils.readFileToString(tmplFile);
  
             String imageName = m.group(2);
-            String imageFileName = imageName.replace('-', '.');
+            int lastOccurrence = imageName.lastIndexOf("-");
+            String imageFileName = new StringBuilder(imageName).replace(lastOccurrence, lastOccurrence+1, ".").toString();
                 
             temp = temp.replace("$image-file", "images/" + imageFileName);
             FileUtils.writeStringToFile(tmplFile, temp);
