@@ -137,7 +137,7 @@ public class FilesystemWalker {
                 templateMap.put(fileName, "file-" + depName);
             }
         }
-        templateMap.putAll(listImages(templateContent, inFolder));
+//        templateMap.putAll(listImages(templateContent, inFolder));
         return templateMap;
     }         
     
@@ -167,14 +167,14 @@ public class FilesystemWalker {
  
             String imageName = m.group(2);
             int lastOccurrence = imageName.lastIndexOf("-");
-            String imageFileName = new StringBuilder(imageName).replace(lastOccurrence, lastOccurrence+1, ".").toString();
+            String imageFileName = new StringBuilder(imageName)
+                    .replace(lastOccurrence, lastOccurrence + 1, ".")
+                    .toString();
                 
-            temp = temp.replace("$image-file", "images/" + imageFileName);
-            FileUtils.writeStringToFile(tmplFile, temp);
-                
-            if (!imagesMap.containsKey(temp)) {
-                    imagesMap.put("templates/" + templateFileName, templateName + "-" + imageName);
-            }
+            temp = temp.replace("$image-file", "images/" + imageFileName);       
+            
+            imagesMap.put(templateName + "-" + imageName, temp);
+            
         }
         return imagesMap;
     }   
@@ -309,7 +309,7 @@ public class FilesystemWalker {
     protected String processTmplFile(File inFolder, File file) throws IOException {
         final String template = FileUtils.readFileToString(file);
         Map<String, String> dependencies = listReferencedFiles(template, inFolder);
-
+        Map<String, String> imagesDependencies = listImages(template, inFolder);
         VelocityContext context = new VelocityContext();
 
         for(String key : globals.stringPropertyNames()) {
@@ -326,6 +326,9 @@ public class FilesystemWalker {
             context.put(dependencies.get(dep), fileMap.get(dep).getText());
         }
         
+        for (String iDep : imagesDependencies.keySet()) {
+            context.put(iDep, imagesDependencies.get(iDep));
+        }
         StringWriter result = new StringWriter();
         Velocity.evaluate(context, result, "error", template);
         return result.toString();
