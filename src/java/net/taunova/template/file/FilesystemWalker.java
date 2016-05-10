@@ -153,6 +153,8 @@ public class FilesystemWalker {
     protected Map<String, String> listImages(String templateContent, File inFolder) throws IOException {
         Map<String, String> imagesMap = new HashMap<>();
         
+        String root = globals.getProperty("root");
+        
         final String imagesPattern = "\\$(image-[\\w|\\d]+)-([-|\\w|\\d]+)";
         Pattern p = Pattern.compile(imagesPattern);
         Matcher m = p.matcher(templateContent);
@@ -171,7 +173,7 @@ public class FilesystemWalker {
                     .replace(lastOccurrence, lastOccurrence + 1, ".")
                     .toString();
                 
-            temp = temp.replace("$image-file", "/images/" + imageFileName);       
+            temp = temp.replace("$image-file", root + "/images/" + imageFileName);       
             
             imagesMap.put(templateName + "-" + imageName, temp);
             

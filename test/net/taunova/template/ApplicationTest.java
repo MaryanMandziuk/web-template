@@ -105,7 +105,7 @@ public class ApplicationTest {
             String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
                     + File.separator + "index.html"));
             String exp_result = "Hello <div class=\"content\"><\\div> world"
-                    + " lorem <img src=\"images/im-1-ost.jpg\" alt=\"Just an image\"> dust"
+                    + " lorem <img src=\"null/images/im-1-ost.jpg\" alt=\"Just an image\"> dust"
                     + "file <div class=\"content\"><\\div> image.";
             assertEquals("failure - genereted file isn't same", exp_result, result);
         } catch(IOException e) {
@@ -161,9 +161,9 @@ public class ApplicationTest {
                 + " lorem $image-test-im-jpg dust"
                 + "file $file-structure-test";
         String deeper_content = "Some content";
-        String static_content = "<div>Hello World!</div> $prop";
+        String static_content = "<div>Hello World!</div> $root";
         String static_page_content = "$file-static-staticTest";
-        String properties_content = "prop=oOps!";
+        String properties_content = "root=dir";
         
         
         FileUtils.writeStringToFile(template_file, image_test_content);
@@ -199,7 +199,7 @@ public class ApplicationTest {
                     + File.separator + "index.html"));
             String exp_result = "Hello <div class=\"content\"><\\div> <h1>some html</h1> "
                     + "Some content exit. World"
-                    + " lorem <img src=\"images/im.jpg\" alt=\"Just an image\"> dust"
+                    + " lorem <img src=\"dir/images/im.jpg\" alt=\"Just an image\"> dust"
                     + "file <div class=\"content\"><\\div> <h1>some html</h1> "
                     + "Some content exit.";
 
@@ -216,7 +216,7 @@ public class ApplicationTest {
             String result = FileUtils.readFileToString(new File(out_folder.getAbsoluteFile() 
                     + File.separator + static_folder.getName() + File.separator + "staticIndex.html"));
 
-            String exp_result = "<div>Hello World!</div> oOps!";
+            String exp_result = "<div>Hello World!</div> dir";
 
             assertEquals("failure - genereted file isn't same", exp_result, result);
         
