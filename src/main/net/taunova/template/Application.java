@@ -18,6 +18,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 /**
  * Template application entry point and arguments processing.
  *
@@ -26,9 +27,9 @@ import org.slf4j.LoggerFactory;
 public class Application {
 
     private static final String MAIN_PROPERTIES = "main";
-    
+
     public static void main(String[] args) {
-        
+
         CommandLineParser parser = new DefaultParser();
         Options options = new Options();
         final Logger logger = LoggerFactory.getLogger(Application.class);
@@ -45,9 +46,9 @@ public class Application {
 
         try {
             CommandLine commandLine = parser.parse(options, args);
-            
+
             if (commandLine.hasOption("f")) {
-                
+
                 final File inFolder = new File(commandLine.getOptionValues("f")[0]);
                 final File outFolder = new File(commandLine.getOptionValues("f")[1]);
 
@@ -58,32 +59,32 @@ public class Application {
                 }
 
                 if (!outFolder.isDirectory()) {
-                     logger.error("Output folder does not exist: "
+                    logger.error("Output folder does not exist: "
                             + outFolder.getAbsolutePath());
-                     System.exit(1);
+                    System.exit(1);
                 }
 
-                    try {
-                        String settingsName;
-                        if (commandLine.hasOption("p")) {
-                            settingsName = commandLine.getOptionValue("p");
-                        } else {
-                            settingsName = MAIN_PROPERTIES;
-                        }
-                        FilesystemWalker app = new FilesystemWalker(settingsName);
-                        if (commandLine.hasOption("m")) {
-                            app.activateMetrics();
-                        }
-                        app.processFolder(inFolder, outFolder.getAbsolutePath(), false);
-                    } catch (IOException ex) {
-                        logger.error("Fail: ", ex);
+                try {
+                    String settingsName;
+                    if (commandLine.hasOption("p")) {
+                        settingsName = commandLine.getOptionValue("p");
+                    } else {
+                        settingsName = MAIN_PROPERTIES;
                     }
+                    FilesystemWalker app = new FilesystemWalker(settingsName);
+                    if (commandLine.hasOption("m")) {
+                        app.activateMetrics();
+                    }
+                    app.processFolder(inFolder, outFolder.getAbsolutePath(), false);
+                } catch (IOException ex) {
+                    logger.error("Fail: ", ex);
+                }
             }
-    
+
         } catch (ParseException ex) {
-                logger.error("Fail, parse error: ", ex);
-                HelpFormatter formatter = new HelpFormatter();
-                formatter.printHelp( "web-template", options );
-        }             
+            logger.error("Fail, parse error: ", ex);
+            HelpFormatter formatter = new HelpFormatter();
+            formatter.printHelp("web-template", options);
+        }
     }
 }
