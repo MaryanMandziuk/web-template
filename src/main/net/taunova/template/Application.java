@@ -43,6 +43,7 @@ public class Application {
                 .required()
                 .desc("required two folders")
                 .build());
+        options.addOption("d", "dry run", false, "Enable dry run");
 
         try {
             CommandLine commandLine = parser.parse(options, args);
@@ -71,7 +72,11 @@ public class Application {
                     } else {
                         settingsName = MAIN_PROPERTIES;
                     }
-                    FilesystemWalker app = new FilesystemWalker(settingsName);
+                    boolean dryRun = false;
+                    if (commandLine.hasOption("d")) {
+                        dryRun = true;
+                    }
+                    FilesystemWalker app = new FilesystemWalker(settingsName, dryRun);
                     if (commandLine.hasOption("m")) {
                         app.activateMetrics();
                     }
