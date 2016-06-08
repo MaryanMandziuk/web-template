@@ -50,15 +50,16 @@ public class FilesystemWalker {
     private boolean collectMetrics = false;
     private final String settingsName;
     private final Logger logger = LoggerFactory.getLogger(FilesystemWalker.class);
-
+    private final boolean dryRun;
     /**
      * Constructs the walker.
      *
      * @param settingsName
+     * @param dryRun
      */
-    public FilesystemWalker(String settingsName) {
+    public FilesystemWalker(String settingsName, boolean dryRun) {
         this.settingsName = settingsName;
-
+        this.dryRun = dryRun;
     }
 
     /**
@@ -202,7 +203,7 @@ public class FilesystemWalker {
         // create a target folder
         String target = path;
 
-        if (createFolder && !noMirrorFlag.isFile()) {
+        if (createFolder && !noMirrorFlag.isFile() && !this.dryRun) {
             target = path + File.separator + folder.getName();
             if (!(new File(target).mkdir())) {
                 logger.error("Unable to create path: " + target);
@@ -252,7 +253,9 @@ public class FilesystemWalker {
             case NO_MIRROR_FLAG:
                 break;
             default:
-                copyFileIfNeeded(file, new File(target + File.separator + file.getName()));
+                if (!this.dryRun) {
+                    copyFileIfNeeded(file, new File(target + File.separator + file.getName()));
+                }
                 break;
         }
     }
@@ -260,9 +263,11 @@ public class FilesystemWalker {
     protected void processAndSaveFile(File inFolder, File file, String target) throws IOException {
         final String fileName = FilenameUtils.getBaseName(file.getName());
         final String result = processTmplFile(inFolder, file);
-        File outFile = new File(target + File.separator + fileName + HTML_EXT);
-        // store result
-        saveFile(outFile, result);
+        if (!this.dryRun) {
+            File outFile = new File(target + File.separator + fileName + HTML_EXT);
+            // store result
+            saveFile(outFile, result);
+        }
     }
 
     /**
